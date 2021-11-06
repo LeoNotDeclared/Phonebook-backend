@@ -2,6 +2,7 @@
 const { response, json } = require('express')
 const express = require('express')
 const morgan = require('morgan')
+const cors = require('cors')
 
 let persons = [
   {
@@ -36,6 +37,9 @@ morgan.token('json', (req, res) => {
 })
 // app.use(morgan('tiny')) // 3.7
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :json')) // 3.8
+
+app.use(cors()) // 3.9
+app.use(express.static('build')) // 3.9
 
 // 3.1
 app.get('/api/persons', (request, response) => {
@@ -91,5 +95,5 @@ app.post('/api/persons', (request, response) => {
   response.json(newPerson)
 })
 
-const PORT = 3001
+const PORT = process.env.PORT || 3001
 app.listen(PORT)
