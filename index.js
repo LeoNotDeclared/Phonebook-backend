@@ -1,31 +1,31 @@
-// modules
-const { response, json } = require('express')
+require('dotenv').config()
 const express = require('express')
 const morgan = require('morgan')
 const cors = require('cors')
+const Person = require('./models/person')
 
-let persons = [
-  {
-    "id": 1,
-    "name": "Arto Hellas",
-    "number": "040-123456"
-  },
-  {
-    "id": 2,
-    "name": "Ada Lovelace",
-    "number": "39-44-5323523"
-  },
-  {
-    "id": 3,
-    "name": "Dan Abramov",
-    "number": "12-43-234345"
-  },
-  {
-    "id": 4,
-    "name": "Mary Poppendieck",
-    "number": "39-23-6423122"
-  }
-]
+// let persons = [
+//   {
+//     "id": 1,
+//     "name": "Arto Hellas",
+//     "number": "040-123456"
+//   },
+//   {
+//     "id": 2,
+//     "name": "Ada Lovelace",
+//     "number": "39-44-5323523"
+//   },
+//   {
+//     "id": 3,
+//     "name": "Dan Abramov",
+//     "number": "12-43-234345"
+//   },
+//   {
+//     "id": 4,
+//     "name": "Mary Poppendieck",
+//     "number": "39-23-6423122"
+//   }
+// ]
 
 const app = express()
 app.use(express.json()) // json parser
@@ -43,26 +43,41 @@ app.use(express.static('build')) // 3.9
 
 // 3.1
 app.get('/api/persons', (request, response) => {
-  response.json(persons)
+  // response.json(persons)
+  Person.find({}).then(people => {
+    response.json(people)
+    mongoose.connection.close()
+  })
 })
 
 // 3.2
 app.get('/info', (request, response) => {
-  response.send(`
-    <p>Phonebook has info for ${persons.length} people</p>
-    <p>${Date()}</p>
-  `)
+  // response.send(`
+  //   <p>Phonebook has info for ${persons.length} people</p>
+  //   <p>${Date()}</p>
+  // `)
+  Person.find({}).then(people => {
+    response.send(`<p>Phonebook has info for ${people.length} people</p> <p>${Date()}</p>`)
+    mongoose.connection.close()
+  })
 })
 
 // 3.3
 app.get('/api/persons/:id', (request, response) => {
-  const id = Number(request.params.id)
-  const person = persons.find(p => p.id === id)
-  if(person) {
-    response.json(person)
-  } else {
-    response.status(400).end()
-  }
+  // const id = Number(request.params.id)
+  // const person = persons.find(p => p.id === id)
+  // if(person) {
+  //   response.json(person)
+  // } else {
+  //   response.status(400).end()
+  // }
+  Person.findById(request.params.id).then(p => {
+    response.json(p)
+    mongoose.connection.close()
+  }).catch((error) => {
+    console.log('error:', error.message)
+    mongoose.connection.close()
+  })
 })
 
 // 3.4
@@ -76,15 +91,15 @@ app.delete('/api/persons/:id', (request, response) => {
 app.post('/api/persons', (request, response) => {
   let newName = '', newNumber = ''
   // 1 name&num exist
-  if(request.body.name && request.body.number) {
+  if (request.body.name && request.body.number) {
     newName = request.body.name
     newNumber = request.body.number
   } else {
     return response.status(400).end() // bad request
   }
   // 2. name already in persons
-  if(persons.map(p => p.name).includes(newName)) { 
-    return response.json({error: 'name must be unique'})
+  if (persons.map(p => p.name).includes(newName)) {
+    return response.json({ error: 'name must be unique' })
   }
   const newPerson = {
     id: Math.floor(Math.random() * 65535),
@@ -95,5 +110,5 @@ app.post('/api/persons', (request, response) => {
   response.json(newPerson)
 })
 
-const PORT = process.env.PORT || 3001
+const PORT = process.env.PORT
 app.listen(PORT)
