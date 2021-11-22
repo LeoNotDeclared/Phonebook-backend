@@ -3,6 +3,7 @@ const express = require('express')
 const morgan = require('morgan')
 const cors = require('cors')
 const Person = require('./models/person')
+// const mongoose = require('mongoose')
 
 // let persons = [
 //   {
@@ -37,7 +38,6 @@ morgan.token('json', (req, res) => {
 })
 // app.use(morgan('tiny')) // 3.7
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :json')) // 3.8
-
 app.use(cors()) // 3.9
 app.use(express.static('build')) // 3.9
 
@@ -46,7 +46,6 @@ app.get('/api/persons', (request, response) => {
   // response.json(persons)
   Person.find({}).then(people => {
     response.json(people)
-    mongoose.connection.close()
   })
 })
 
@@ -58,7 +57,6 @@ app.get('/info', (request, response) => {
   // `)
   Person.find({}).then(people => {
     response.send(`<p>Phonebook has info for ${people.length} people</p> <p>${Date()}</p>`)
-    mongoose.connection.close()
   })
 })
 
@@ -73,10 +71,9 @@ app.get('/api/persons/:id', (request, response) => {
   // }
   Person.findById(request.params.id).then(p => {
     response.json(p)
-    mongoose.connection.close()
   }).catch((error) => {
     console.log('error:', error.message)
-    mongoose.connection.close()
+    response.status(400).end()
   })
 })
 
@@ -90,23 +87,38 @@ app.delete('/api/persons/:id', (request, response) => {
 // 3.5 - 3.6
 app.post('/api/persons', (request, response) => {
   let newName = '', newNumber = ''
-  // 1 name&num exist
+  // 1 name&num input bar not null
   if (request.body.name && request.body.number) {
     newName = request.body.name
     newNumber = request.body.number
   } else {
+    // console.log('post null data')
+    response.json({ error: 'post null data' })
     return response.status(400).end() // bad request
   }
   // 2. name already in persons
-  if (persons.map(p => p.name).includes(newName)) {
-    return response.json({ error: 'name must be unique' })
-  }
-  const newPerson = {
+  // if (persons.map(p => p.name).includes(newName)) {
+  //   return response.json({ error: 'name must be unique' })
+  // }
+  Person.find({name: newName}).then(result => {
+    console.log(result, result.length)
+    if(result.length !== 0) {
+      // response.json({ error: 'name must be unique' })
+      // console.log('error: name must be unique')
+      // 有问题 暂时为同一个名字的人提供多个条目 3.14
+      return response.status(400).end() // bad request
+    }
+  })
+  // add to db
+  const newPerson = new Person({
     id: Math.floor(Math.random() * 65535),
     name: newName,
     number: newNumber
-  }
-  persons = persons.concat(newPerson) // bug: conflict possible
+  })
+  // persons = persons.concat(newPerson) // bug: conflict possible
+  newPerson.save().then(result => {
+    console.log(`added ${result.name} number ${result.number} to phonebook`)
+  })
   response.json(newPerson)
 })
 
