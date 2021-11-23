@@ -78,10 +78,13 @@ app.get('/api/persons/:id', (request, response) => {
 })
 
 // 3.4
-app.delete('/api/persons/:id', (request, response) => {
-  const id = Number(request.params.id)
-  persons = persons.filter(p => p.id !== id)
-  response.status(204).end()
+app.delete('/api/persons/:id', (request, response, next) => {
+  // const id = Number(request.params.id)
+  // persons = persons.filter(p => p.id !== id)
+  // response.status(204).end()
+  Person.findByIdAndRemove(request.params.id).then(result => {
+    response.status(204).end()
+  }).catch(error => next(error))
 })
 
 // 3.5 - 3.6
@@ -121,6 +124,30 @@ app.post('/api/persons', (request, response) => {
   })
   response.json(newPerson)
 })
+
+app.put('/api/persons/:id', (request, response, next) => {
+  const person = {
+    name: request.body.name,
+    number: request.body.number
+  }
+  Person.findByIdAndUpdate(request.params.id, person, {new: true}).then(updatePerson => {
+    response.json(updatePerson)
+  }).catch(error => next(error))
+})
+
+const unknowEndpoint = (request, response) => {
+  response.status(404).send({error: 'unknow endpoint'})
+}
+app.use(unknowEndpoint)
+
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message)
+  if (error.name === 'CastError') {
+    return response.status(400).send({error: 'malformatted id'})
+  }
+  next(error)
+}
+app.use(errorHandler)
 
 const PORT = process.env.PORT
 app.listen(PORT)
