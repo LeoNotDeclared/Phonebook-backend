@@ -6,24 +6,28 @@ const url = process.env.MONGODB_URI
 console.log('connecting to', url)
 
 // 连接
-mongoose.connect(url).then(result => {
-  console.log('connected to MongoDB')
-}).catch( (error) => {
-  console.log('error connecting to MongoDB:', error.message)
-})
+mongoose.connect(url)
+  .then(result => {
+    console.log('connected to MongoDB')
+  })
+  .catch((error) => {
+    console.log('error connecting to MongoDB:', error.message)
+  })
 
-// Schema
+// define personSchema
 const personSchema = new mongoose.Schema({
   id: {
     type: Number
   },
   name: {
     type: String,
+    minlength: 3,
     required: true,
     unique: true
   },
   number: {
     type:String,
+    minlength: 8,
     required: true
   }
 })

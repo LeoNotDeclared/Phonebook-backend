@@ -134,9 +134,11 @@ app.put('/api/persons/:id', (request, response, next) => {
     name: request.body.name,
     number: request.body.number
   }
-  Person.findByIdAndUpdate(request.params.id, person, {new: true}).then(updatePerson => {
-    response.json(updatePerson)
-  }).catch(error => next(error))
+  Person.findByIdAndUpdate(request.params.id, person, {new: true, runValidators: true})
+    .then(updatePerson => {
+      response.json(updatePerson)
+    })
+    .catch(error => next(error))
 })
 
 const unknowEndpoint = (request, response) => {
