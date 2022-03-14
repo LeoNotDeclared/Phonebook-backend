@@ -41,6 +41,10 @@ app.use(morgan(':method :url :status :res[content-length] - :response-time ms :j
 app.use(cors()) // 3.9
 app.use(express.static('build')) // 3.9
 
+app.get('/', (request, response) => {
+  response.send('<h1>Hello World!</h1>')
+})
+
 // 3.1
 app.get('/api/persons', (request, response) => {
   // response.json(persons)
