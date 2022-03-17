@@ -38,9 +38,11 @@ morgan.token('json', (req, res) => {
 })
 // app.use(morgan('tiny')) // 3.7
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :json')) // 3.8
-app.use(cors()) // 3.9
-app.use(express.static('build')) // 3.9
+app.use(cors()) // 3.9 跨来源(域)资源共享
+app.use(express.static('build')) // 3.9 后端部署静态文件
 
+
+// route handlers
 app.get('/', (request, response) => {
   response.send('<h1>Hello World!</h1>')
 })
